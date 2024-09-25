@@ -455,27 +455,27 @@ async fn benchmark_sha2_chain_network(iters: u32) -> (Duration, usize) {
     let  size : usize;
     let start = Instant::now();
 
-        let proving_result = prover_client.prover.prove(&input, None).await;
-        match proving_result {
-            Ok(Some(prover_result)) => {
-                log::info!("Generating proof successfully .");
-                size = prover_result.proof_with_public_inputs.len();
-            }
-            Ok(None) => {
-                log::info!("Failed to generate proof.The result is None.");
-                size = 0;
-            }
-            Err(e) => {
-                log::info!("Failed to generate proof. error: {}", e);
-                //return (0, 0);
-                size = 0;
-            }
+    let proving_result = prover_client.prover.prove(&input, None).await;
+    match proving_result {
+        Ok(Some(prover_result)) => {
+            size = prover_result.proof_with_public_inputs.len();
+            log::info!("Generating proof successfully .len:{}", size);
         }
+        Ok(None) => {
+            log::info!("Failed to generate proof.The result is None.");
+            size = 0;
+        }
+        Err(e) => {
+            log::info!("Failed to generate proof. error: {}", e);
+                //return (0, 0);
+            size = 0;
+        }
+    }
     
 
     let end = Instant::now();
     let duration = end.duration_since(start);
-
+    log::info!("duration(ms):{}, proof len:{}", duration.as_millis(), size);
     (duration, size)
   
 }
