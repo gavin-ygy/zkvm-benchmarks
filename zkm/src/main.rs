@@ -20,8 +20,10 @@ use zkm_prover::proof::PublicValues;
 use zkm_prover::prover::prove;
 use zkm_prover::verifier::verify_proof;
 
+//network proving
 use zkm_sdk::{prover::ProverInput, ProverClient};
 use tokio::runtime::Builder;
+use std::fs::read;
 
 const FIBONACCI_ELF: &str = "./fibonacci/target/mips-unknown-linux-musl/release/fibonacci";
 const SHA2_ELF: &str = "./sha2/target/mips-unknown-linux-musl/release/sha2-bench";
