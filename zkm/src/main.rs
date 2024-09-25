@@ -491,12 +491,12 @@ async fn benchmark_sha2_network(num_bytes: usize) -> (Duration, usize) {
     let elf_path = SHA2_ELF;
 
     let input = vec![5u8; num_bytes];
-    let mut pub_input_buf = Vec::new();
-    bincode::serialize_into(&mut pub_input_buf, &input).expect("serialization failed");
+    //let mut pub_input_buf = Vec::new();
+    //bincode::serialize_into(&mut pub_input_buf, &input).expect("serialization failed");
 
     let input = ProverInput {
         elf: read(elf_path).unwrap(),
-        public_inputstream: pub_input_buf,
+        public_inputstream: input,
         private_inputstream: "".into(),
         seg_size: seg_size as u32,
         execute_only: false,
