@@ -44,7 +44,7 @@ async fn main() {
 
     let lengths = [32, 256, 512, 1024, 2048];
     benchmark(benchmark_sha2, &lengths, "../benchmark_outputs/sha2_zkm.csv", "byte length");
-    benchmark(benchmark_sha2_network, &lengths, "../benchmark_outputs/sha2_zkm_network.csv", "byte length").await;
+    benchmark_async(benchmark_sha2_network, &lengths, "../benchmark_outputs/sha2_zkm_network.csv", "byte length").await;
   /*  benchmark(benchmark_sha3, &lengths, "../benchmark_outputs/sha3_zkm.csv", "byte length");
 
     let ns = [100, 1000, 10000, 50000];
