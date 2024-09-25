@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 utils = { path = "../utils" }
+zkm-sdk = { git = "https://github.com/gavin-ygy/zkm-project-template", branch = "main", default-features = false }
 zkm-prover = { git = "https://github.com/zkMIPS/zkm", branch = "main", default-features = false }
 zkm-emulator = { git = "https://github.com/zkMIPS/zkm", branch = "main", default-features = false }
 plonky2 = { git = "https://github.com/zkMIPS/plonky2.git", branch = "zkm_dev" }

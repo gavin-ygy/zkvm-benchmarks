@@ -20,6 +20,9 @@ use zkm_prover::proof::PublicValues;
 use zkm_prover::prover::prove;
 use zkm_prover::verifier::verify_proof;
 
+use zkm_sdk::{prover::ProverInput, ProverClient};
+use tokio::runtime::Builder;
+
 const FIBONACCI_ELF: &str = "./fibonacci/target/mips-unknown-linux-musl/release/fibonacci";
 const SHA2_ELF: &str = "./sha2/target/mips-unknown-linux-musl/release/sha2-bench";
 const SHA2_CHAIN_ELF: &str = "./sha2-chain/target/mips-unknown-linux-musl/release/sha2-chain";
@@ -30,12 +33,13 @@ const SEG_SIZE: usize = 262144 * 8; //G
 
 const DEGREE_BITS_RANGE: [Range<usize>; 6] = [10..23, 10..23, 10..23, 8..23, 6..23, 13..25];
 
-fn main() {
+#[tokio::main]
+async fn main() {
     init_logger();
 
     let _ = std::fs::remove_dir_all("/tmp/zkm.old");
     let _ = std::fs::rename("/tmp/zkm", "/tmp/zkm.old");
-
+/*
     let lengths = [32, 256, 512, 1024, 2048];
     benchmark(benchmark_sha2, &lengths, "../benchmark_outputs/sha2_zkm.csv", "byte length");
     benchmark(benchmark_sha3, &lengths, "../benchmark_outputs/sha3_zkm.csv", "byte length");
@@ -45,10 +49,11 @@ fn main() {
 
     let values = [5];
     benchmark(benchmark_bigmem, &values, "../benchmark_outputs/bigmem_zkm.csv", "value");
-
+*/
     let iters = [230, 460, 920, 1840, 3680];
-    benchmark(benchmark_sha2_chain, &iters, "../benchmark_outputs/sha2_chain_zkm.csv", "iters");
-    benchmark(benchmark_sha3_chain, &iters, "../benchmark_outputs/sha3_chain_zkm.csv", "iters");
+    //benchmark(benchmark_sha2_chain, &iters, "../benchmark_outputs/sha2_chain_zkm.csv", "iters");
+    //benchmark(benchmark_sha3_chain, &iters, "../benchmark_outputs/sha3_chain_zkm.csv", "iters");
+    benchmark_async(benchmark_sha2_chain_network, &iters, "../benchmark_outputs/sha2_chain_netowrk_zkm.csv", "iters").await;
 }
 
 fn prove_single_seg_common(
@@ -418,4 +423,57 @@ fn benchmark_bigmem(value: u32) -> (Duration, usize) {
 
     let _output = state.read_public_values::<u32>();
     (duration, size)
+}
+
+async fn benchmark_sha2_chain_network(iters: u32) -> (Duration, usize) {
+    log::info!("new prover client.");
+  
+    let prover_client = ProverClient::new().await; //ENV: ZKM_PROVER=network
+    log::info!("new prover client,ok.");
+
+    let seg_size = SEG_SIZE;
+    let execute_only = false;
+    let elf_path = SHA2_CHAIN_ELF;
+    
+    let input = [5u8; 32];
+    let mut pub_input_buf = Vec::new();
+    bincode::serialize_into(&mut pub_input_buf, &input).expect("serialization failed");
+
+    let mut priv_input_buf = Vec::new();
+    bincode::serialize_into(&mut priv_input_buf, &iters).expect("serialization failed");
+
+    let input = ProverInput {
+        elf: read(elf_path).unwrap(),
+        public_inputstream: pub_input_buf,
+        private_inputstream: priv_input_buf,
+        seg_size: seg_size as u32,
+        execute_only: execute_only,
+    };
+   
+    let  size : usize;
+    let start = Instant::now();
+
+        let proving_result = prover_client.prover.prove(&input, None).await;
+        match proving_result {
+            Ok(Some(prover_result)) => {
+                log::info!("Generating proof successfully .");
+                size = prover_result.proof_with_public_inputs.len();
+            }
+            Ok(None) => {
+                log::info!("Failed to generate proof.The result is None.");
+                size = 0;
+            }
+            Err(e) => {
+                log::info!("Failed to generate proof. error: {}", e);
+                //return (0, 0);
+                size = 0;
+            }
+        }
+    
+
+    let end = Instant::now();
+    let duration = end.duration_since(start);
+
+    (duration, size)
+  
 }
