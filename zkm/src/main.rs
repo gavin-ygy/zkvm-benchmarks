@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use utils::benchmark;
+use utils::{benchmark,benchmark_async};
 
 use std::fs::File;
 use std::io::BufReader;
